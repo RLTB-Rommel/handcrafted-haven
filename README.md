@@ -6,8 +6,8 @@ Innovative web app for artisans and crafters
 - e-commerce
 - community features
 - focused design
-  # Goals
-  -suppot local
-  - promote sustainability
-  - build a thriving community
+# Goals
+- suppot local
+- promote sustainability
+- build a thriving community
   
