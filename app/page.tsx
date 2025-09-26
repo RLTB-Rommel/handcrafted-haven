@@ -34,7 +34,7 @@ export default function HomePage() {
               key={p.id}
               name={p.name}
               price={p.price}
-              image={p.image} // e.g. "/products/mug.jpg"
+              image={p.image}
             />
           ))}
         </div>
