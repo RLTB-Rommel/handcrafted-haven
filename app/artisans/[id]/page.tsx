@@ -6,7 +6,7 @@ export default function ArtisanProfile({ params }: { params: { id: string } }) {
   const artisan = artisans.find((a) => a.id === params.id);
   if (!artisan) return <div>Artisan not found.</div>;
 
-  // Cast p.id to string so it matches productIds: string[]
+  // FIX: match types (productIds is string[], p.id is number)
   const artisanProducts = products.filter((p) =>
     (artisan.productIds ?? []).includes(String(p.id))
   );
