@@ -1,4 +1,5 @@
 import { artisans } from "../../lib/artisans";
+import { products } from "../../lib/products";
 
 export default function ArtisansIndex() {
   return (
