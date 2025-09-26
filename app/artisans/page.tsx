@@ -1,5 +1,6 @@
 import { artisans } from "../../lib/artisans";
-import { products } from "../../lib/products";
+
+import Image from "next/image";
 
 export default function ArtisansIndex() {
   return (
@@ -13,9 +14,11 @@ export default function ArtisansIndex() {
             href={`/artisans/${a.id}`}
             className="block rounded-xl border border-slate-200 p-4 bg-white shadow-sm hover:shadow-md transition"
           >
-            <img
+            <Image
               src={a.image}
               alt={a.name}
+              width={600}
+              height={400}
               className="w-full h-40 object-cover rounded-md"
             />
             <h2 className="mt-3 text-lg font-semibold">{a.name}</h2>
