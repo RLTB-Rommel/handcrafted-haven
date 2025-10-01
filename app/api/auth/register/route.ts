@@ -3,6 +3,9 @@ import { prisma } from "@/lib/prisma";
 import { z } from "zod";
 import bcrypt from "bcryptjs";
 
+// Ensure this route runs on the Node runtime (Prisma/bcrypt need Node)
+export const runtime = "nodejs";
+
 const pathOrUrl = z.union([
   z.string().url("Invalid URL"),
   z.string().regex(/^\/[^\s]+$/, "Use a path like /artisans/luna-pottery.jpg"),
@@ -43,15 +46,19 @@ export async function POST(req: Request) {
     const passwordHash = await bcrypt.hash(parsed.password, 10);
 
     // Unique slug based on displayName
-    let base = slugify(parsed.displayName) || "artisan";
-    let slug = base, i = 1;
+    const base = slugify(parsed.displayName) || "artisan";
+    let slug = base;
+    let i = 1;
+    // Requires `slug` to be @unique on ArtisanProfile
     while (await prisma.artisanProfile.findUnique({ where: { slug } })) {
       slug = `${base}-${i++}`;
     }
 
-    // Normalize empty strings -> null
-    const avatarUrl = parsed.avatarUrl && parsed.avatarUrl.length ? parsed.avatarUrl : null;
-    const coverUrl  = parsed.coverUrl  && parsed.coverUrl.length  ? parsed.coverUrl  : null;
+    // Normalize empty strings -> null (DB columns are nullable)
+    const avatarUrl =
+      parsed.avatarUrl && parsed.avatarUrl.length ? parsed.avatarUrl : null;
+    const coverUrl =
+      parsed.coverUrl && parsed.coverUrl.length ? parsed.coverUrl : null;
 
     // Create user + artisan profile
     const user = await prisma.user.create({
@@ -67,8 +74,8 @@ export async function POST(req: Request) {
             bio: parsed.bio || "",
             city: parsed.city || "",
             country: parsed.country || "",
-            avatarUrl,  // nullable in schema
-            coverUrl,   // nullable in schema
+            avatarUrl, // nullable
+            coverUrl,  // nullable
             slug,
           },
         },
@@ -76,11 +83,9 @@ export async function POST(req: Request) {
       include: { artisan: true },
     });
 
-    return NextResponse.json(
-      { ok: true, slug: user.artisan?.slug },
-      { status: 201 }
-    );
-  } catch (e: any) {
+    return NextResponse.json({ ok: true, slug: user.artisan?.slug }, { status: 201 });
+  } catch (e: unknown) {
+    // Zod validation errors
     if (e instanceof z.ZodError) {
       const flat = e.flatten();
       return NextResponse.json(
@@ -89,11 +94,16 @@ export async function POST(req: Request) {
       );
     }
 
-    // Handle Prisma unique constraint on email safely
-    if (e?.code === "P2002" && Array.isArray(e?.meta?.target) && e.meta.target.includes("email")) {
-      return NextResponse.json({ errors: { email: ["Email already in use."] } }, { status: 422 });
+    // Prisma unique constraint on email (defensive check without importing Prisma error types)
+    const pe = e as { code?: string; meta?: { target?: string[] } };
+    if (pe?.code === "P2002" && Array.isArray(pe?.meta?.target) && pe.meta!.target!.includes("email")) {
+      return NextResponse.json(
+        { errors: { email: ["Email already in use."] } },
+        { status: 422 }
+      );
     }
 
-    return NextResponse.json({ error: e?.message ?? "Invalid request" }, { status: 400 });
+    const ge = e as { message?: string };
+    return NextResponse.json({ error: ge?.message ?? "Invalid request" }, { status: 400 });
   }
 }
