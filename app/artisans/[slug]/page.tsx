@@ -1,13 +1,14 @@
 import Image from "next/image";
-import Link from "next/link";
 import { prisma } from "@/lib/prisma";
+import { notFound } from "next/navigation";
 
-export const revalidate = 0;
-export const dynamic = "force-dynamic";
+type ArtisanDetailProps = {
+  params: { slug: string };
+};
 
-export default async function ArtisansIndex() {
-  const artisans = await prisma.artisanProfile.findMany({
-    orderBy: { createdAt: "desc" },
+export default async function ArtisanDetail({ params }: ArtisanDetailProps) {
+  const artisan = await prisma.artisanProfile.findUnique({
+    where: { slug: params.slug },
     select: {
       id: true,
       slug: true,
@@ -16,50 +17,50 @@ export default async function ArtisansIndex() {
       bio: true,
       avatarUrl: true,
       coverUrl: true,
+      city: true,
+      country: true,
+      createdAt: true,
     },
   });
 
+  if (!artisan) return notFound();
+
   return (
     <div className="space-y-6">
-      <h1 className="text-2xl font-semibold">Artisans</h1>
+      {/* Cover */}
+      <div className="relative h-60 w-full overflow-hidden rounded-xl">
+        <Image
+          src={artisan.coverUrl || "/placeholder-cover.jpg"}
+          alt={artisan.studioName || artisan.displayName || "Artisan cover"}
+          fill
+          className="object-cover"
+          sizes="100vw"
+        />
+      </div>
 
-      <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
-        {artisans.map((a) => (
-          <Link
-            key={a.id}
-            href={`/artisans/${a.slug}`}
-            className="block rounded-xl border border-slate-200 bg-white shadow-sm hover:shadow-md transition"
-          >
-            {/* Cover image */}
-            <div className="w-full h-40 overflow-hidden rounded-t-xl relative">
-              <Image
-                src={a.coverUrl || "/placeholder-cover.jpg"}
-                alt={a.studioName || a.displayName}
-                fill
-                className="object-cover"
-              />
-            </div>
+      {/* Avatar + name */}
+      <div className="flex items-center gap-4">
+        <Image
+          src={artisan.avatarUrl || "/placeholder-avatar.png"}
+          alt={`${artisan.displayName ?? "Artisan"} avatar`}
+          width={80}
+          height={80}
+          className="rounded-full border object-cover"
+        />
+        <div>
+          <h1 className="text-2xl font-bold">
+            {artisan.studioName || artisan.displayName}
+          </h1>
+          <p className="text-slate-600">
+            {artisan.city ? `${artisan.city}, ${artisan.country}` : ""}
+          </p>
+        </div>
+      </div>
 
-            {/* Avatar + Name + Bio */}
-            <div className="p-4">
-              <div className="flex items-center gap-3">
-                <Image
-                  src={a.avatarUrl || "/placeholder-avatar.png"}
-                  alt={`${a.displayName} avatar`}
-                  width={48}
-                  height={48}
-                  className="rounded-full border object-cover"
-                />
-                <h2 className="text-lg font-semibold">
-                  {a.studioName || a.displayName}
-                </h2>
-              </div>
-              <p className="mt-2 text-sm text-slate-600 line-clamp-2">
-                {a.bio || "—"}
-              </p>
-            </div>
-          </Link>
-        ))}
+      {/* Bio */}
+      <div>
+        <h2 className="text-lg font-semibold">About</h2>
+        <p className="mt-2 text-slate-700">{artisan.bio || "No bio yet."}</p>
       </div>
     </div>
   );
