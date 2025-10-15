@@ -1,0 +1,13 @@
+{
+  "/_not-found/page": "app/_not-found/page.js",
+  "/api/auth/[...nextauth]/route": "app/api/auth/[...nextauth]/route.js",
+  "/api/auth/register/route": "app/api/auth/register/route.js",
+  "/api/products/route": "app/api/products/route.js",
+  "/artisans/[slug]/page": "app/artisans/[slug]/page.js",
+  "/artisans/page": "app/artisans/page.js",
+  "/auth/login/page": "app/auth/login/page.js",
+  "/auth/register/page": "app/auth/register/page.js",
+  "/dashboard/products/new/page": "app/dashboard/products/new/page.js",
+  "/page": "app/page.js",
+  "/products/page": "app/products/page.js"
+}

@@ -32,7 +32,7 @@ model ArtisanProfile {
   createdAt   DateTime  @default(now())
   updatedAt   DateTime  @updatedAt
   user        User      @relation(fields: [userId], references: [id])
-  Product     Product[]
+  Product     Product[] // ok to keep this name; optional: rename to `products`
 }
 
 model Product {
@@ -47,6 +47,10 @@ model Product {
   createdAt      DateTime        @default(now())
   updatedAt      DateTime        @updatedAt
   ArtisanProfile ArtisanProfile? @relation(fields: [artisanId], references: [id])
+
+  // Ratings
+  ratingCount    Int             @default(0)
+  ratingSum      Int             @default(0)
 }
 
 enum Role {
