@@ -1,26 +1,29 @@
-import { NextResponse } from "next/server";
+import { NextResponse, type NextRequest } from "next/server";
 import { prisma } from "@/lib/prisma";
 
-export const dynamic = "force-dynamic";
-
-/** List products belonging to a specific artisan slug */
 export async function GET(
-  _req: Request,
-  { params }: { params: Promise<{ slug: string }> }
+  _req: NextRequest,
+  ctx: { params: Promise<{ slug: string }> }
 ) {
-  const { slug } = await params;
+  const { slug } = await ctx.params;
 
-  const artisan = await prisma.user.findUnique({
-    where: { studioSlug: slug },
-    select: { id: true },
-  });
-
-  if (!artisan) return NextResponse.json([]);
-
-  const items = await prisma.product.findMany({
-    where: { artisanId: artisan.id },
+  // Fetch this artisan's products via the relation
+  const products = await prisma.product.findMany({
+    where: { ArtisanProfile: { slug } },
     orderBy: { createdAt: "desc" },
+    select: {
+      id: true,
+      name: true,
+      description: true,
+      priceCents: true,
+      imageUrl: true,
+      brand: true,
+      category: true,
+      ratingCount: true,
+      ratingSum: true,
+      createdAt: true,
+    },
   });
 
-  return NextResponse.json(items);
+  return NextResponse.json(products);
 }
